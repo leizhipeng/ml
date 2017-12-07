@@ -40,7 +40,8 @@ class LearningAgent(Agent):
         # Update additional class parameters as needed
         # If 'testing' is True, set epsilon and alpha to 0
 
-        self.epsilon -= 0.05
+        self.epsilon = self.epsilon - 0.05
+        # self.epsilon = self.epsilon * 0.95
 
         if testing:
             self.epsilon = 0.0
@@ -123,13 +124,15 @@ class LearningAgent(Agent):
         
         # action = random.sample(self.valid_actions,  1)[0]
         q_dic = self.Q[state]
-        q_act = max(q_dic, key=q_dic.get)
+        q_acts = [k for k in q_dic if q_dic[k] == self.get_maxQ(state) ]
         exp_acts = q_dic.keys()
         # exp_acts = [k for k in q_dic if k != q_act]
         if random.random() < self.epsilon:
-            action = random.sample(exp_acts,  1)[0]
+            # action = random.sample(exp_acts,  1)[0]
+            action = random.choice(exp_acts)
         else:
-            action = q_act
+            # action = random.sample(q_acts,  1)[0]
+            action = random.choice(q_acts)
         
 
         return action
@@ -183,7 +186,8 @@ def run():
     #   learning   - set to True to force the driving agent to use Q-learning
     #    * epsilon - continuous value for the exploration factor, default is 1
     #    * alpha   - continuous value for the learning rate, default is 0.5
-    agent = env.create_agent(LearningAgent,learning = True)
+    # agent = env.create_agent(LearningAgent,learning = True)
+    agent = env.create_agent(LearningAgent,learning = True,epsilon = 1, alpha = 0.2)
     
     ##############
     # Follow the driving agent
@@ -197,15 +201,18 @@ def run():
     #   update_delay - continuous time (in seconds) between actions, default is 2.0 seconds
     #   display      - set to False to disable the GUI if PyGame is enabled
     #   log_metrics  - set to True to log trial and simulation results to /logs
-    #   optimized    - set to True to change the default log file name
-    sim = Simulator(env, update_delay=0.01,log_metrics=True)
+    #   optimized    - set to True to change the default log file name. 
+    # sim = Simulator(env, update_delay=0.01,log_metrics= True )
+    sim = Simulator(env, update_delay=0.01,log_metrics= True , optimized = True)
     
     ##############
     # Run the simulator
     # Flags:
     #   tolerance  - epsilon tolerance before beginning testing, default is 0.05 
     #   n_test     - discrete number of testing trials to perform, default is 0
-    sim.run(n_test=10)
+    
+    # sim.run(n_test=10)
+    sim.run(n_test=10, tolerance =0.1)
 
 
 if __name__ == '__main__':
