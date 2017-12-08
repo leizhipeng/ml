@@ -23,6 +23,7 @@ class LearningAgent(Agent):
         ## TO DO ##
         ###########
         # Set any additional class parameters as needed
+        self.gamma = 0.0
 
 
     def reset(self, destination=None, testing=False):
@@ -40,8 +41,8 @@ class LearningAgent(Agent):
         # Update additional class parameters as needed
         # If 'testing' is True, set epsilon and alpha to 0
 
-        self.epsilon = self.epsilon - 0.05
-        # self.epsilon = self.epsilon * 0.95
+        # self.epsilon = self.epsilon - 0.05
+        self.epsilon = self.epsilon * 0.97
 
         if testing:
             self.epsilon = 0.0
@@ -97,11 +98,12 @@ class LearningAgent(Agent):
         # When learning, check if the 'state' is not in the Q-table
         # If it is not, create a new dictionary for that state
         #   Then, for each action available, set the initial Q-value to 0.0
-        if state not in self.Q:
-            self.Q[state] = {self.valid_actions[0]: 0.0,
-                            self.valid_actions[1]: 0.0,
-                            self.valid_actions[2]: 0.0,
-                            self.valid_actions[3]: 0.0,}
+        if self.learning:
+            if state not in self.Q:
+                self.Q[state] = {self.valid_actions[0]: 0.0,
+                                self.valid_actions[1]: 0.0,
+                                self.valid_actions[2]: 0.0,
+                                self.valid_actions[3]: 0.0,}
         return
 
 
@@ -122,19 +124,17 @@ class LearningAgent(Agent):
         # Otherwise, choose an action with the highest Q-value for the current state
         # Be sure that when choosing an action with highest Q-value that you randomly select between actions that "tie".
         
-        # action = random.sample(self.valid_actions,  1)[0]
-        q_dic = self.Q[state]
-        q_acts = [k for k in q_dic if q_dic[k] == self.get_maxQ(state) ]
-        exp_acts = q_dic.keys()
-        # exp_acts = [k for k in q_dic if k != q_act]
-        if random.random() < self.epsilon:
-            # action = random.sample(exp_acts,  1)[0]
-            action = random.choice(exp_acts)
+        if self.learning:
+            q_dic = self.Q[state]
+            q_acts = [k for k in q_dic if q_dic[k] == self.get_maxQ(state) ]
+            exp_acts = q_dic.keys()
+            if random.random() < self.epsilon:
+                action = random.choice(exp_acts)
+            else:
+                action = random.choice(q_acts)
         else:
-            # action = random.sample(q_acts,  1)[0]
-            action = random.choice(q_acts)
-        
-
+            action = random.choice(self.valid_actions)
+   
         return action
 
 
@@ -149,8 +149,12 @@ class LearningAgent(Agent):
         # When learning, implement the value iteration update rule
         #   Use only the learning rate 'alpha' (do not use the discount factor 'gamma')
         # print self.alpha
-        self.Q[state][action] = self.Q[state][action] + self.alpha*reward
-                                
+        if self.learning:
+            next_state = self.build_state()
+            self.createQ(next_state) 
+            self.Q[state][action] = self.Q[state][action] + self.alpha*(
+                                    reward+ self.gamma *  self.get_maxQ(next_state) )
+
         return
 
 
